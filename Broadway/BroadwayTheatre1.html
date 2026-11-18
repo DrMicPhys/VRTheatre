@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic Broadway Theatre (~830 Seats, Orchestra Pit & Refined Floor Layout) - A-Frame WebVR</title>
+  <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+
+  <!-- Procedural Seating Component -->
+  <script>
+    AFRAME.registerComponent('theater-seating', {
+      init: function () {
+        const el = this.el;
+
+        // Color Palette
+        const cushionColor = '#6b0c19';
+        const backColor = '#5c0a14';
+        const woodColor = '#2b1810';
+        const stepColor = '#1f0d13';
+        const goldColor = '#c5a059';
+
+        // Effective focal point for seating curvature: 10m behind center stage (0, 0, 10.0)
+        const focalZ = 10.0;
+
+        // Optimized helper function to create an individual seat entity (2 primitives per seat for high frame-rate performance)
+        function createSeat(x, y, z, rotationY) {
+          const seatGroup = document.createElement('a-entity');
+          seatGroup.setAttribute('position', `${x} ${y} ${z}`);
+          seatGroup.setAttribute('rotation', `0 ${rotationY} 0`);
+
+          // Seat Cushion & Frame
+          const cushion = document.createElement('a-box');
+          cushion.setAttribute('position', '0 0.12 0');
+          cushion.setAttribute('width', '0.52');
+          cushion.setAttribute('height', '0.24');
+          cushion.setAttribute('depth', '0.48');
+          cushion.setAttribute('color', cushionColor);
+          cushion.setAttribute('material', 'roughness: 0.8');
+
+          // Backrest
+          const back = document.createElement('a-box');
+          back.setAttribute('position', '0 0.42 -0.20');
+          back.setAttribute('width', '0.50');
+          back.setAttribute('height', '0.56');
+          back.setAttribute('depth', '0.10');
+          back.setAttribute('color', backColor);
+          back.setAttribute('material', 'roughness: 0.8');
+
+          seatGroup.appendChild(cushion);
+          seatGroup.appendChild(back);
+
+          return seatGroup;
+        }
+
+        // Helper function to create curved balcony structure (parapet wall, floor, soffit)
+        function createCurvedBalconyStructure(config) {
+          const {
+            frontRadius,
+            rearRadius,
+            startY,
+            yStep,
+            numRows,
+            rowStepR,
+            maxAngle,
+            railHeight = 0.75,
+            isUpper = false
+          } = config;
+
+          const angleStep = 2.0;
+          const startAngle = -maxAngle;
+
+          // 1. FRONT CURVED RAILING & FASCIA
+          const railRadius = frontRadius - 0.45;
+          const railSegWidth = 2 * railRadius * Math.sin(((angleStep * Math.PI) / 180) / 2) + 0.03;
+
+          for (let a = startAngle; a <= maxAngle; a += angleStep) {
+            const angleRad = (a * Math.PI) / 180;
+            const x = Math.sin(angleRad) * railRadius;
+            const z = focalZ - Math.cos(angleRad) * railRadius;
+            const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+            const railGroup = document.createElement('a-entity');
+            railGroup.setAttribute('position', `${x} ${startY + 0.35} ${z}`);
+            railGroup.setAttribute('rotation', `0 ${rotY} 0`);
+
+            const panel = document.createElement('a-box');
+            panel.setAttribute('position', '0 0 0');
+            panel.setAttribute('width', railSegWidth);
+            panel.setAttribute('height', railHeight);
+            panel.setAttribute('depth', '0.25');
+            panel.setAttribute('color', backColor);
+            panel.setAttribute('material', 'roughness: 0.85');
+
+            const cap = document.createElement('a-box');
+            cap.setAttribute('position', `0 ${railHeight / 2 + 0.04} 0`);
+            cap.setAttribute('width', railSegWidth + 0.02);
+            cap.setAttribute('height', '0.08');
+            cap.setAttribute('depth', '0.32');
+            cap.setAttribute('color', woodColor);
+
+            const goldTrim = document.createElement('a-box');
+            goldTrim.setAttribute('position', `0 ${-railHeight / 4} 0.13`);
+            goldTrim.setAttribute('width', railSegWidth);
+            goldTrim.setAttribute('height', '0.08');
+            goldTrim.setAttribute('depth', '0.04');
+            goldTrim.setAttribute('color', goldColor);
+            goldTrim.setAttribute('material', 'metalness: 0.7; roughness: 0.3');
+
+            railGroup.appendChild(panel);
+            railGroup.appendChild(cap);
+            railGroup.appendChild(goldTrim);
+            el.appendChild(railGroup);
+          }
+
+          // 2. CURVED STEPPED FLOOR TIERS
+          for (let r = 0; r < numRows; r++) {
+            const rRadius = frontRadius + (r * rowStepR);
+            const rY = startY + (r * yStep);
+            const stepSegWidth = 2 * rRadius * Math.sin(((angleStep * Math.PI) / 180) / 2) + 0.03;
+
+            for (let a = startAngle; a <= maxAngle; a += angleStep) {
+              const angleRad = (a * Math.PI) / 180;
+              const x = Math.sin(angleRad) * rRadius;
+              const z = focalZ - Math.cos(angleRad) * rRadius;
+              const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+              const floorSeg = document.createElement('a-box');
+              floorSeg.setAttribute('position', `${x} ${rY - 0.20} ${z}`);
+              floorSeg.setAttribute('rotation', `0 ${rotY} 0`);
+              floorSeg.setAttribute('width', stepSegWidth);
+              floorSeg.setAttribute('height', '0.38');
+              floorSeg.setAttribute('depth', rowStepR + 0.15);
+              floorSeg.setAttribute('color', stepColor);
+              floorSeg.setAttribute('material', 'roughness: 0.9');
+              el.appendChild(floorSeg);
+            }
+          }
+
+          // 3. CURVED STRUCTURAL CANTILEVER UNDERSIDE (SOFFIT)
+          const midRadius = (frontRadius + rearRadius) / 2;
+          const depthSpan = (rearRadius - frontRadius) + 1.2;
+          const soffitY = startY - 0.45;
+          const slopeAngle = isUpper ? 19.2 : 12;
+
+          for (let a = startAngle; a <= maxAngle; a += angleStep * 1.5) {
+            const angleRad = (a * Math.PI) / 180;
+            const x = Math.sin(angleRad) * midRadius;
+            const z = focalZ - Math.cos(angleRad) * midRadius;
+            const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+            const soffitSeg = document.createElement('a-box');
+            const segW = 2 * midRadius * Math.sin((((angleStep * 1.5) * Math.PI) / 180) / 2) + 0.05;
+            soffitSeg.setAttribute('position', `${x} ${soffitY} ${z}`);
+            soffitSeg.setAttribute('rotation', `${slopeAngle} ${rotY} 0`);
+            soffitSeg.setAttribute('width', segW);
+            soffitSeg.setAttribute('height', '0.50');
+            soffitSeg.setAttribute('depth', depthSpan);
+            soffitSeg.setAttribute('color', '#220a0f');
+            soffitSeg.setAttribute('material', 'roughness: 0.9');
+            el.appendChild(soffitSeg);
+          }
+        }
+
+        let totalSeatsGenerated = 0;
+
+        // =========================================================
+        // 1. DENSE ORCHESTRA FLOOR SEATING (~520 Seats across 21 Active Rows)
+        //    Focal center at (0, 0, 10.0) [10m behind center stage].
+        //    First row starts at r=1 to leave generous clearance around pit.
+        //    Leftmost 2 and rightmost 2 seats removed for side wall buffer.
+        // =========================================================
+        const orchRows = 22;
+        const orchStartR = 18.8; 
+        const orchRStep = 1.08;
+        const orchYStart = -0.45;
+        const orchYStep = 0.11;
+
+        for (let r = 1; r < orchRows; r++) {
+          // HALFWAY CROSS AISLE (Skip Row 11 / index 10 for walkway)
+          if (r === 10) continue;
+
+          const radius = orchStartR + (r * orchRStep);
+          const y = orchYStart + (r * orchYStep);
+
+          // Max angle smoothly transitions across rows
+          const t = r / (orchRows - 1);
+          const maxAngleDeg = 34.0 * (1 - t) + 23.5 * t;
+          
+          // Uniform physical seat spacing along the arc (~0.58m per seat)
+          const seatSpacingDeg = (0.58 / radius) * (180 / Math.PI);
+          const numSeatsHalf = Math.floor(maxAngleDeg / seatSpacingDeg);
+
+          // Position side aisle cleanly halfway across each side section
+          const sideAisleIndex = Math.floor(numSeatsHalf * 0.48);
+
+          // Trim 2 seats off leftmost end (-numSeatsHalf + 2) and rightmost end (numSeatsHalf - 2)
+          for (let i = -numSeatsHalf + 2; i <= numSeatsHalf - 2; i++) {
+            // CENTER AISLE: 2-seat wide clear passage down the center
+            if (i === 0 || i === -1) continue;
+
+            // SIDE AISLES: 1-seat wide clear radial passages on left & right
+            if (i === sideAisleIndex || i === -sideAisleIndex - 1) continue;
+
+            const angleDeg = (i + 0.5) * seatSpacingDeg;
+            const angleRad = (angleDeg * Math.PI) / 180;
+
+            const x = Math.sin(angleRad) * radius;
+            const z = focalZ - Math.cos(angleRad) * radius;
+            const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+            el.appendChild(createSeat(x, y, z, rotY));
+            totalSeatsGenerated++;
+          }
+        }
+
+        // =========================================================
+        // 2. MEZZANINE LEVEL (~230 Seats & Wall-to-Wall Curved Balcony)
+        //    Front row z ≈ -18.8m => Radius from (0,0,10) is R = 28.8m
+        // =========================================================
+        const mezRows = 5;
+        const mezStartR = 28.8;
+        const mezRStep = 1.25;
+        const mezYStart = 5.2;
+        const mezYStep = 0.48;
+        const mezMaxAngleStruct = 34.0;
+        const mezMaxAngleSeats = 31.5;
+
+        createCurvedBalconyStructure({
+          frontRadius: mezStartR,
+          rearRadius: mezStartR + (mezRows * mezRStep),
+          startY: mezYStart,
+          yStep: mezYStep,
+          numRows: mezRows,
+          rowStepR: mezRStep,
+          maxAngle: mezMaxAngleStruct,
+          railHeight: 0.75,
+          isUpper: false
+        });
+
+        for (let r = 0; r < mezRows; r++) {
+          const radius = mezStartR + (r * mezRStep);
+          const yFloor = mezYStart + (r * mezYStep);
+          
+          const maxAngleDeg = mezMaxAngleSeats - (r * 0.5);
+          const seatSpacingDeg = (0.58 / radius) * (180 / Math.PI);
+          const numSeatsHalf = Math.floor(maxAngleDeg / seatSpacingDeg);
+          const sideAisleIndex = Math.floor(numSeatsHalf * 0.48);
+
+          for (let i = -numSeatsHalf + 2; i <= numSeatsHalf - 2; i++) {
+            if (i === 0 || i === -1) continue; // Center aisle
+            if (i === sideAisleIndex || i === -sideAisleIndex - 1) continue; // Side aisle
+
+            const angleDeg = (i + 0.5) * seatSpacingDeg;
+            const angleRad = (angleDeg * Math.PI) / 180;
+
+            const x = Math.sin(angleRad) * radius;
+            const z = focalZ - Math.cos(angleRad) * radius;
+            const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+            el.appendChild(createSeat(x, yFloor, z, rotY));
+            totalSeatsGenerated++;
+          }
+        }
+
+        // =========================================================
+        // 3. UPPER BALCONY LEVEL (~160 Seats & Wall-to-Wall Curved Balcony)
+        //    Front row z ≈ -22.5m => Radius from (0,0,10) is R = 32.5m
+        //    Raised +1m to y = 10.2m, incline/pitch increased 20% (yStep = 0.66m)
+        // =========================================================
+        const balcRows = 4;
+        const balcStartR = 32.5;
+        const balcRStep = 1.275;
+        const balcYStart = 10.2;
+        const balcYStep = 0.66;
+        const balcMaxAngleStruct = 32.5;
+        const balcMaxAngleSeats = 30.0;
+
+        createCurvedBalconyStructure({
+          frontRadius: balcStartR,
+          rearRadius: balcStartR + (balcRows * balcRStep),
+          startY: balcYStart,
+          yStep: balcYStep,
+          numRows: balcRows,
+          rowStepR: balcRStep,
+          maxAngle: balcMaxAngleStruct,
+          railHeight: 0.75,
+          isUpper: true
+        });
+
+        for (let r = 0; r < balcRows; r++) {
+          const radius = balcStartR + (r * balcRStep);
+          const yFloor = balcYStart + (r * balcYStep);
+          
+          const maxAngleDeg = balcMaxAngleSeats - (r * 0.4);
+          const seatSpacingDeg = (0.60 / radius) * (180 / Math.PI);
+          const numSeatsHalf = Math.floor(maxAngleDeg / seatSpacingDeg);
+          const sideAisleIndex = Math.floor(numSeatsHalf * 0.48);
+
+          for (let i = -numSeatsHalf + 2; i <= numSeatsHalf - 2; i++) {
+            if (i === 0 || i === -1) continue; // Center aisle
+            if (i === sideAisleIndex || i === -sideAisleIndex - 1) continue; // Side aisle
+
+            const angleDeg = (i + 0.5) * seatSpacingDeg;
+            const angleRad = (angleDeg * Math.PI) / 180;
+
+            const x = Math.sin(angleRad) * radius;
+            const z = focalZ - Math.cos(angleRad) * radius;
+            const rotY = Math.atan2(-x, focalZ - z) * (180 / Math.PI);
+
+            el.appendChild(createSeat(x, yFloor, z, rotY));
+            totalSeatsGenerated++;
+          }
+        }
+
+        // =========================================================
+        // 4. ORCHESTRA PIT DETAILS (MUSIC STANDS WITH AMBER GLOW)
+        // =========================================================
+        const pitGroup = document.createElement('a-entity');
+        pitGroup.setAttribute('id', 'pit-interior-details');
+        
+        // Conductor's Podium & Stand
+        const podium = document.createElement('a-box');
+        podium.setAttribute('position', '0 -1.6 -6.8');
+        podium.setAttribute('width', '1.0');
+        podium.setAttribute('height', '0.35');
+        podium.setAttribute('depth', '1.0');
+        podium.setAttribute('color', woodColor);
+
+        const condStand = document.createElement('a-cylinder');
+        condStand.setAttribute('position', '0 -1.1 -6.5');
+        condStand.setAttribute('radius', '0.02');
+        condStand.setAttribute('height', '0.9');
+        condStand.setAttribute('color', '#1a1a1a');
+
+        const condDesk = document.createElement('a-box');
+        condDesk.setAttribute('position', '0 -0.6 -6.5');
+        condDesk.setAttribute('rotation', '30 0 0');
+        condDesk.setAttribute('width', '0.5');
+        condDesk.setAttribute('height', '0.35');
+        condDesk.setAttribute('depth', '0.04');
+        condDesk.setAttribute('color', '#111');
+
+        const condLight = document.createElement('a-sphere');
+        condLight.setAttribute('position', '0 -0.42 -6.48');
+        condLight.setAttribute('radius', '0.04');
+        condLight.setAttribute('color', '#ffaa44');
+        condLight.setAttribute('material', 'emissive: #ffaa44; emissiveIntensity: 1.0');
+
+        pitGroup.appendChild(podium);
+        pitGroup.appendChild(condStand);
+        pitGroup.appendChild(condDesk);
+        pitGroup.appendChild(condLight);
+
+        // Musician Music Stands with soft glowing sheet music
+        const standPos = [
+          {x: -4.5, z: -5.8}, {x: -2.8, z: -5.9}, {x: -1.5, z: -6.0},
+          {x: 1.5, z: -6.0},  {x: 2.8, z: -5.9},  {x: 4.5, z: -5.8},
+          {x: -3.8, z: -7.0}, {x: -2.0, z: -7.1}, {x: 2.0, z: -7.1}, {x: 3.8, z: -7.0}
+        ];
+
+        standPos.forEach(p => {
+          const sPole = document.createElement('a-cylinder');
+          sPole.setAttribute('position', `${p.x} -1.25 ${p.z}`);
+          sPole.setAttribute('radius', '0.015');
+          sPole.setAttribute('height', '0.8');
+          sPole.setAttribute('color', '#1a1a1a');
+
+          const sDesk = document.createElement('a-box');
+          sDesk.setAttribute('position', `${p.x} -0.8 ${p.z}`);
+          sDesk.setAttribute('rotation', '35 0 0');
+          sDesk.setAttribute('width', '0.42');
+          sDesk.setAttribute('height', '0.3');
+          sDesk.setAttribute('depth', '0.03');
+          sDesk.setAttribute('color', '#151515');
+
+          const sSheet = document.createElement('a-plane');
+          sSheet.setAttribute('position', `${p.x} -0.79 ${p.z + 0.02}`);
+          sSheet.setAttribute('rotation', '-35 0 0');
+          sSheet.setAttribute('width', '0.35');
+          sSheet.setAttribute('height', '0.24');
+          sSheet.setAttribute('color', '#fffaea');
+          sSheet.setAttribute('material', 'emissive: #ffaa44; emissiveIntensity: 0.35');
+
+          pitGroup.appendChild(sPole);
+          pitGroup.appendChild(sDesk);
+          pitGroup.appendChild(sSheet);
+        });
+
+        el.appendChild(pitGroup);
+
+        // =========================================================
+        // 5. PROSCENIUM BOX CHAIRS (8 Boxes total: 4 Lower, 4 Upper)
+        // =========================================================
+        const boxPositions = [
+          // Lower Tier Boxes (Base y = 4.7m, floor surface y = 4.9m)
+          { x: -12.2, y: 4.9, z: -8.5 },
+          { x:  12.2, y: 4.9, z: -8.5 },
+          { x: -13.6, y: 4.9, z: -13.2 },
+          { x:  13.6, y: 4.9, z: -13.2 },
+          // Upper Tier Boxes (Base y = 8.2m, floor surface y = 8.4m)
+          { x: -12.2, y: 8.4, z: -8.5 },
+          { x:  12.2, y: 8.4, z: -8.5 },
+          { x: -13.6, y: 8.4, z: -13.2 },
+          { x:  13.6, y: 8.4, z: -13.2 }
+        ];
+
+        boxPositions.forEach(b => {
+          const offsets = [
+            { dx: -0.4, dz:  0.4 },
+            { dx:  0.4, dz: -0.4 }
+          ];
+          offsets.forEach(off => {
+            const seatX = b.x + off.dx;
+            const seatZ = b.z + off.dz;
+            const rotY = Math.atan2(-seatX, focalZ - seatZ) * (180 / Math.PI);
+            el.appendChild(createSeat(seatX, b.y, seatZ, rotY));
+            totalSeatsGenerated++;
+          });
+        });
+
+        console.log(`[Theater Seating & Architecture] Generated ${totalSeatsGenerated} seats across Orchestra, Mezzanine, Upper Balcony, and Proscenium Boxes.`);
+      }
+    });
+  </script>
+</head>
+<body>
+  <a-scene background="color: #050204" fog="type: exponential; color: #080306; density: 0.018" renderer="colorManagement: true; exposure: 1.3">
+    
+    <!-- ======================================================= -->
+    <!-- ASSETS & REUSABLE MIXINS                                -->
+    <!-- ======================================================= -->
+    <a-assets>
+      <a-mixin id="wood-dark" material="color: #2b1810; roughness: 0.6; metalness: 0.1"></a-mixin>
+      <a-mixin id="velvet-red" material="color: #5c0a14; roughness: 0.9; metalness: 0.05"></a-mixin>
+      <a-mixin id="gold-trim" material="color: #c5a059; roughness: 0.3; metalness: 0.7"></a-mixin>
+      <a-mixin id="wall-burgundy" material="color: #3b0d14; roughness: 0.85; metalness: 0.05"></a-mixin>
+    </a-assets>
+
+    <!-- ======================================================= -->
+    <!-- DEFAULT A-FRAME CAMERA / SPAWN POINT (CENTER STAGE)     -->
+    <!-- ======================================================= -->
+    <!-- Spawns at Center Stage (0, 1.6, 0), facing auditorium (-Z) with standard A-Frame WASD and mouse controls -->
+    <a-entity camera="active: true" look-controls wasd-controls position="0 1.6 0" ></a-entity>
+    <!-- ======================================================= -->
+    <!-- ATMOSPHERIC THEATRE LIGHTING (A-Frame 1.8+ Compatible)  -->
+    <!-- ======================================================= -->
+    <a-light type="ambient" color="#ffeedd" intensity="0.85"></a-light>
+    <a-light type="hemisphere" color="#ffeacc" groundColor="#2b0d14" intensity="0.65"></a-light>
+
+    <!-- Overhead Stage Spotlight focused on actor at (0, 0, 0) -->
+    <a-light type="spot" color="#fff4df" intensity="12.0" angle="38" penumbra="0.5" position="0 10 1.8" target="#stage-center-target" castShadow="true"></a-light>
+    <a-entity id="stage-center-target" position="0 0 -0.5"></a-entity>
+
+    <!-- Traditional Ghost Light (Stage Left) -->
+    <a-entity id="ghost-light-group" position="-2.5 0 -1">
+      <a-cylinder radius="0.18" height="0.03" color="#1a1a1a" position="0 0.015 0"></a-cylinder>
+      <a-cylinder radius="0.015" height="1.3" color="#333333" position="0 0.65 0"></a-cylinder>
+      <a-sphere radius="0.06" color="#ffeaad" material="emissive: #ffca64; emissiveIntensity: 1" position="0 1.33 0"></a-sphere>
+      <a-light type="point" color="#ffc374" intensity="2.5" distance="12" decay="0" position="0 1.33 0"></a-light>
+    </a-entity>
+
+    <!-- Orchestra Pit Warm Glow -->
+    <a-light type="point" color="#ffaa55" intensity="1.8" distance="12" decay="0" position="0 -1.0 -6.5"></a-light>
+
+    <!-- Auditorium Ambient Light Sources -->
+    <a-light type="point" color="#ffaa55" intensity="2.2" distance="35" decay="0" position="0 9 -18"></a-light>
+    <a-light type="point" color="#ffaa55" intensity="1.8" distance="32" decay="0" position="0 12 -30"></a-light>
+
+    <!-- Curved Recessed Lighting following Mezzanine Underside Arc -->
+    <a-entity id="curved-soffit-lights">
+      <a-light type="point" color="#ffaa55" intensity="1.2" distance="16" decay="0" position="-13 4.6 -17.2"></a-light>
+      <a-light type="point" color="#ffaa55" intensity="1.2" distance="16" decay="0" position="-6.5 4.6 -20.0"></a-light>
+      <a-light type="point" color="#ffaa55" intensity="1.2" distance="16" decay="0" position="0 4.6 -21.2"></a-light>
+      <a-light type="point" color="#ffaa55" intensity="1.2" distance="16" decay="0" position="6.5 4.6 -20.0"></a-light>
+      <a-light type="point" color="#ffaa55" intensity="1.2" distance="16" decay="0" position="13 4.6 -17.2"></a-light>
+    </a-entity>
+
+    <!-- ======================================================= -->
+    <!-- AUDITORIUM SIDE WALL LIGHTS                             -->
+    <!-- ======================================================= -->
+    <a-entity id="auditorium-wall-lights">
+      <!-- Floor Level Left Side Wall Sconces (2.5m Above Floor Seats, Angled 18 deg) -->
+      <!-- 1. Above Front Row (Row 1: z = -9.88m, Seat Y = -0.34m -> Light Y = 2.16m) -->
+      <a-entity position="-12.65 2.16 -9.88" rotation="0 18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- 2. Above Cross Aisle (Row 11: z = -19.60m, Seat Y = 0.65m -> Light Y = 3.15m) -->
+      <a-entity position="-15.80 3.15 -19.60" rotation="0 18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- 3. Above Back Floor Row (Row 21: z = -31.48m, Seat Y = 1.86m -> Light Y = 4.36m) -->
+      <a-entity position="-19.66 4.36 -31.48" rotation="0 18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- Floor Level Right Side Wall Sconces (2.5m Above Floor Seats, Angled -18 deg) -->
+      <!-- 1. Above Front Row (Row 1: z = -9.88m, Seat Y = -0.34m -> Light Y = 2.16m) -->
+      <a-entity position="12.65 2.16 -9.88" rotation="0 -18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="-0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="-0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- 2. Above Cross Aisle (Row 11: z = -19.60m, Seat Y = 0.65m -> Light Y = 3.15m) -->
+      <a-entity position="15.80 3.15 -19.60" rotation="0 -18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="-0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="-0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- 3. Above Back Floor Row (Row 21: z = -31.48m, Seat Y = 1.86m -> Light Y = 4.36m) -->
+      <a-entity position="19.66 4.36 -31.48" rotation="0 -18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="-0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="-0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- Mezzanine Balcony Wall Lights (2m Above Row 1 Seat Level: y = 7.2m, z = -18.8m) -->
+      <a-entity position="-15.54 7.20 -18.80" rotation="0 18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="0.1 0 0"></a-light>
+      </a-entity>
+
+      <a-entity position="15.54 7.20 -18.80" rotation="0 -18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="-0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="-0.1 0 0"></a-light>
+      </a-entity>
+
+      <!-- Upper Balcony Wall Lights (2m Above Row 1 Seat Level: y = 12.2m, z = -22.5m) -->
+      <a-entity position="-16.75 12.20 -22.50" rotation="0 18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="0.1 0 0"></a-light>
+      </a-entity>
+
+      <a-entity position="16.75 12.20 -22.50" rotation="0 -18 0">
+        <a-box position="0 0 0" width="0.08" height="0.42" depth="0.25" mixin="gold-trim"></a-box>
+        <a-sphere position="-0.06 0 0" radius="0.15" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+        <a-light type="point" color="#ffaa55" intensity="1.2" distance="14" decay="0" position="-0.1 0 0"></a-light>
+      </a-entity>
+    </a-entity>
+
+    <!-- ======================================================= -->
+    <!-- STAGE & PROSCENIUM ARCH                                 -->
+    <!-- ======================================================= -->
+    <!-- Stage Floor -->
+    <a-box id="stage-floor" position="0 -0.05 1" width="24" height="0.1" depth="13" mixin="wood-dark"></a-box>
+    <a-box position="0 -0.6 -5.4" width="24.2" height="1.0" depth="0.2" color="#1a0f0a"></a-box>
+
+    <!-- Backstage Walls & Wings -->
+    <a-box position="0 8 7.5" width="28" height="16" depth="0.3" color="#080406"></a-box>
+    <a-box position="-12 8 1" width="0.3" height="16" depth="13" color="#0d0609"></a-box>
+    <a-box position="12 8 1" width="0.3" height="16" depth="13" color="#0d0609"></a-box>
+
+    <!-- Wing Drapes -->
+    <a-entity id="stage-wings">
+      <a-box position="-9.8 6 3.5" width="0.1" height="12" depth="3.5" color="#111"></a-box>
+      <a-box position="-9.4 6 -1" width="0.1" height="12" depth="3.5" color="#111"></a-box>
+      <a-box position="9.8 6 3.5" width="0.1" height="12" depth="3.5" color="#111"></a-box>
+      <a-box position="9.4 6 -1" width="0.1" height="12" depth="3.5" color="#111"></a-box>
+    </a-entity>
+
+    <!-- Grand Proscenium Arch -->
+    <a-entity id="proscenium" position="0 0 -5.3">
+      <a-box position="0 10.2 0" width="23" height="2.6" depth="0.9" mixin="wood-dark"></a-box>
+      <a-box position="0 9.0 0.45" width="23.2" height="0.28" depth="0.1" mixin="gold-trim"></a-box>
+      <a-cylinder position="0 10.2 0.5" rotation="90 0 0" radius="1.2" height="0.12" mixin="gold-trim"></a-cylinder>
+
+      <a-box position="-11 5.0 0" width="1.8" height="13.0" depth="0.9" mixin="wood-dark"></a-box>
+      <a-box position="-10.2 5.0 0.45" width="0.25" height="13.0" depth="0.1" mixin="gold-trim"></a-box>
+      
+      <a-box position="11 5.0 0" width="1.8" height="13.0" depth="0.9" mixin="wood-dark"></a-box>
+      <a-box position="10.2 5.0 0.45" width="0.25" height="13.0" depth="0.1" mixin="gold-trim"></a-box>
+
+      <a-box position="0 8.3 0.2" width="20.2" height="1.8" depth="0.15" mixin="velvet-red"></a-box>
+      <a-box position="0 7.35 0.25" width="20.2" height="0.12" depth="0.05" mixin="gold-trim"></a-box>
+    </a-entity>
+
+    <!-- ======================================================= -->
+    <!-- ORCHESTRA PIT (RECESSED BELOW & EXTENDING UNDER STAGE)  -->
+    <!-- ======================================================= -->
+    <a-entity id="orchestra-pit">
+      <!-- Pit Floor (Recessed to y = -1.8) -->
+      <a-box position="0 -1.8 -6.5" width="13" height="0.1" depth="3.6" color="#10080b"></a-box>
+
+      <!-- Pit Back Wall (Extending under stage apron) -->
+      <a-box position="0 -0.9 -4.7" width="13.2" height="1.8" depth="0.2" color="#0a0406"></a-box>
+      <a-box position="-6.5 -0.9 -6.5" width="0.2" height="1.8" depth="3.6" color="#0a0406"></a-box>
+      <a-box position="6.5 -0.9 -6.5" width="0.2" height="1.8" depth="3.6" color="#0a0406"></a-box>
+
+      <!-- Pit Front Wall & Protective Railing (Facing Orchestra Seats) -->
+      <a-box position="0 -1.0 -8.2" width="13.2" height="1.6" depth="0.2" color="#1f0c12"></a-box>
+      <a-box position="0 -0.15 -8.2" width="13.4" height="0.08" depth="0.28" mixin="wood-dark"></a-box>
+      <a-box position="0 -0.22 -8.08" width="13.2" height="0.05" depth="0.04" mixin="gold-trim"></a-box>
+    </a-entity>
+
+    <!-- ======================================================= -->
+    <!-- AUDITORIUM ARCHITECTURE (FANNING OUTWARDS)              -->
+    <!-- ======================================================= -->
+    <!-- Raked Orchestra Floor -->
+    <a-plane position="0 -0.3 -21" rotation="-81 0 0" width="42" height="32" mixin="wall-burgundy"></a-plane>
+
+    <!-- Fanning Side Walls (Angling outward from 22m near stage to 42m at rear wall) -->
+    <a-box position="-16.5 8 -21" rotation="0 18 0" width="0.5" height="20" depth="32" mixin="wall-burgundy"></a-box>
+    <a-box position="-16.2 7.5 -21" rotation="0 18 0" width="0.15" height="0.25" depth="32" mixin="gold-trim"></a-box>
+
+    <a-box position="16.5 8 -21" rotation="0 -18 0" width="0.5" height="20" depth="32" mixin="wall-burgundy"></a-box>
+    <a-box position="16.2 7.5 -21" rotation="0 -18 0" width="0.15" height="0.25" depth="32" mixin="gold-trim"></a-box>
+
+    <!-- Rear Auditorium Wall -->
+    <a-box position="0 9.5 -36" width="44" height="21" depth="0.5" mixin="wall-burgundy"></a-box>
+
+    <!-- High Vaulted Ceiling & Decorative Architectural Beams -->
+    <a-plane position="0 17.5 -21" rotation="90 0 0" width="44" height="32" color="#120609" material="roughness: 0.95"></a-plane>
+
+    <a-entity id="ceiling-beams">
+      <!-- Transverse Wooden Beams with Gold Molding Accent -->
+      <a-box position="0 17.2 -8" width="28" height="0.45" depth="0.5" mixin="wood-dark"></a-box>
+      <a-box position="0 16.95 -8" width="28" height="0.05" depth="0.56" mixin="gold-trim"></a-box>
+
+      <a-box position="0 17.2 -14" width="32" height="0.45" depth="0.5" mixin="wood-dark"></a-box>
+      <a-box position="0 16.95 -14" width="32" height="0.05" depth="0.56" mixin="gold-trim"></a-box>
+
+      <a-box position="0 17.2 -20" width="36" height="0.45" depth="0.5" mixin="wood-dark"></a-box>
+      <a-box position="0 16.95 -20" width="36" height="0.05" depth="0.56" mixin="gold-trim"></a-box>
+
+      <a-box position="0 17.2 -26" width="40" height="0.45" depth="0.5" mixin="wood-dark"></a-box>
+      <a-box position="0 16.95 -26" width="40" height="0.05" depth="0.56" mixin="gold-trim"></a-box>
+
+      <a-box position="0 17.2 -32" width="42" height="0.45" depth="0.5" mixin="wood-dark"></a-box>
+      <a-box position="0 16.95 -32" width="42" height="0.05" depth="0.56" mixin="gold-trim"></a-box>
+
+      <!-- Longitudinal Beams framing the Coffered Ceiling -->
+      <a-box position="-10 17.25 -21" width="0.5" height="0.38" depth="30" mixin="wood-dark"></a-box>
+      <a-box position="-10 17.04 -21" width="0.56" height="0.04" depth="30" mixin="gold-trim"></a-box>
+
+      <a-box position="0 17.25 -21" width="0.5" height="0.38" depth="30" mixin="wood-dark"></a-box>
+      <a-box position="0 17.04 -21" width="0.56" height="0.04" depth="30" mixin="gold-trim"></a-box>
+
+      <a-box position="10 17.25 -21" width="0.5" height="0.38" depth="30" mixin="wood-dark"></a-box>
+      <a-box position="10 17.04 -21" width="0.56" height="0.04" depth="30" mixin="gold-trim"></a-box>
+    </a-entity>
+
+
+
+    <!-- Grand 2x2 Chandelier Array -->
+    <!-- Front Pair (z = -7.5m, ~2m in front of stage apron) -->
+    <a-entity id="chandelier-front-left" position="-6.0 14.0 -7.5">
+      <a-cylinder radius="0.04" height="3.5" color="#c5a059" position="0 1.75 0"></a-cylinder>
+      <a-cone radius-bottom="1.2" radius-top="0.3" height="0.6" position="0 0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-cone radius-bottom="1.8" radius-top="0.4" height="0.8" position="0 -0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-sphere radius="0.4" position="0 -0.45 0" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+      <a-light type="point" color="#ffc070" intensity="1.5" distance="25" decay="0" position="0 -0.45 0"></a-light>
+    </a-entity>
+
+    <a-entity id="chandelier-front-right" position="6.0 14.0 -7.5">
+      <a-cylinder radius="0.04" height="3.5" color="#c5a059" position="0 1.75 0"></a-cylinder>
+      <a-cone radius-bottom="1.2" radius-top="0.3" height="0.6" position="0 0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-cone radius-bottom="1.8" radius-top="0.4" height="0.8" position="0 -0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-sphere radius="0.4" position="0 -0.45 0" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+      <a-light type="point" color="#ffc070" intensity="1.5" distance="25" decay="0" position="0 -0.45 0"></a-light>
+    </a-entity>
+
+    <!-- Rear Pair (z = -16.5m, ~2m in front of Mezzanine front edge at z ≈ -18.5m) -->
+    <a-entity id="chandelier-rear-left" position="-7.5 14.0 -16.5">
+      <a-cylinder radius="0.04" height="3.5" color="#c5a059" position="0 1.75 0"></a-cylinder>
+      <a-cone radius-bottom="1.2" radius-top="0.3" height="0.6" position="0 0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-cone radius-bottom="1.8" radius-top="0.4" height="0.8" position="0 -0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-sphere radius="0.4" position="0 -0.45 0" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+      <a-light type="point" color="#ffc070" intensity="1.5" distance="25" decay="0" position="0 -0.45 0"></a-light>
+    </a-entity>
+
+    <a-entity id="chandelier-rear-right" position="7.5 14.0 -16.5">
+      <a-cylinder radius="0.04" height="3.5" color="#c5a059" position="0 1.75 0"></a-cylinder>
+      <a-cone radius-bottom="1.2" radius-top="0.3" height="0.6" position="0 0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-cone radius-bottom="1.8" radius-top="0.4" height="0.8" position="0 -0.3 0" mixin="gold-trim" material="wireframe: true"></a-cone>
+      <a-sphere radius="0.4" position="0 -0.45 0" color="#ffeedd" material="shader: flat; color: #ffca64; roughness: 0.3"></a-sphere>
+      <a-light type="point" color="#ffc070" intensity="1.5" distance="25" decay="0" position="0 -0.45 0"></a-light>
+    </a-entity>
+
+    <!-- PROSCENIUM BOX SEATS (Stage Left & Right Double Box Tiers - Upper & Lower Levels) -->
+    <a-entity id="proscenium-boxes">
+      <!-- LOWER TIER BOXES (y = 4.7m) -->
+      <!-- Stage Left Front Box -->
+      <a-box position="-12.2 4.7 -8.5" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="-10.7 5.2 -8.5" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="-12.2 5.2 -6.8" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="-10.7 5.55 -8.5" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="-12.2 5.55 -6.8" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Right Front Box -->
+      <a-box position="12.2 4.7 -8.5" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="10.7 5.2 -8.5" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="12.2 5.2 -6.8" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="10.7 5.55 -8.5" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="12.2 5.55 -6.8" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Left Rear Box -->
+      <a-box position="-13.6 4.7 -13.2" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="-12.1 5.2 -13.2" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="-13.6 5.2 -11.5" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="-12.1 5.55 -13.2" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="-13.6 5.55 -11.5" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Right Rear Box -->
+      <a-box position="13.6 4.7 -13.2" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="12.1 5.2 -13.2" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="13.6 5.2 -11.5" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="12.1 5.55 -13.2" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="13.6 5.55 -11.5" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- UPPER TIER BOXES (3.5m above lower tier, y = 8.2m) -->
+      <!-- Stage Left Upper Front Box -->
+      <a-box position="-12.2 8.2 -8.5" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="-10.7 8.7 -8.5" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="-12.2 8.7 -6.8" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="-10.7 9.05 -8.5" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="-12.2 9.05 -6.8" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Right Upper Front Box -->
+      <a-box position="12.2 8.2 -8.5" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="10.7 8.7 -8.5" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="12.2 8.7 -6.8" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="10.7 9.05 -8.5" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="12.2 9.05 -6.8" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Left Upper Rear Box -->
+      <a-box position="-13.6 8.2 -13.2" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="-12.1 8.7 -13.2" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="-13.6 8.7 -11.5" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="-12.1 9.05 -13.2" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="-13.6 9.05 -11.5" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+
+      <!-- Stage Right Upper Rear Box -->
+      <a-box position="13.6 8.2 -13.2" width="3.4" height="0.4" depth="3.6" color="#260b10"></a-box>
+      <a-box position="12.1 8.7 -13.2" width="0.2" height="0.65" depth="3.6" mixin="velvet-red"></a-box>
+      <a-box position="13.6 8.7 -11.5" width="3.4" height="0.65" depth="0.2" mixin="velvet-red"></a-box>
+      <a-box position="12.1 9.05 -13.2" width="0.25" height="0.06" depth="3.6" mixin="gold-trim"></a-box>
+      <a-box position="13.6 9.05 -11.5" width="3.4" height="0.06" depth="0.25" mixin="gold-trim"></a-box>
+    </a-entity>
+
+    <!-- ======================================================= -->
+    <!-- DYNAMIC PROCEDURAL SEATING & BALCONY ARCHITECTURE       -->
+    <!-- ======================================================= -->
+    <a-entity theater-seating></a-entity>
+
+  </a-scene>
+</body>
+</html>

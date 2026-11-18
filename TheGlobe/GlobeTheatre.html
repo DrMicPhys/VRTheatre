@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Globe Theatre 2</title>
+        <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
+        <script src="https://unpkg.com/aframe-environment-component@1.4.0/dist/aframe-environment-component.min.js"></script>
+    </head>
+    <body>
+        <a-scene >
+            <a-circle color="tan" radius="25" rotation="-90 0 0" position="0 -0.01 0" ></a-circle>            
+            <a-entity position="0 0 0" scale="1 1 1">
+                <a-entity rotation="0 180 0" position="0 0 0"><!-- a tier entity -->
+                    <a-cone src="planks3.png" repeat="54 1" radius-bottom="16" radius-top="24" height="1.5" open-ended="true" position="0 0.75 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-cone material=" src: raillingtexture.png; opacity: .99; repeat: 48 1"
+                    radius-bottom="15" radius-top="15" height="1" open-ended="true" position="0 0.5 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-ring color="tan" side="double" radius-inner="15" radius-outer="16" rotation=" -90 0 0"
+                    segments-theta="12" theta-length="270" theta-start="-45"></a-ring>
+                </a-entity>
+                <a-entity rotation="0 180 0" position="0 4 0"><!-- a tier entity -->
+                    <a-cone src="planks3.png" repeat="54 1" radius-bottom="16" radius-top="24" height="1.5" open-ended="true" position="0 0.75 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-cone material=" src: raillingtexture.png; opacity: .99; repeat: 48 1"
+                    radius-bottom="15" radius-top="15" height="1" open-ended="true" position="0 0.5 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-ring color="tan" side="double" radius-inner="15" radius-outer="16" rotation=" -90 0 0"
+                    segments-theta="12" theta-length="270" theta-start="-45"></a-ring>
+                </a-entity>
+                <a-entity rotation="0 180 0" position="0 8 0"><!-- a tier entity -->
+                    <a-cone src="planks3.png" repeat="54 1" radius-bottom="16" radius-top="24" height="1.5" open-ended="true" position="0 0.75 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-cone material=" src: raillingtexture.png; opacity: .99; repeat: 48 1"
+                    radius-bottom="15" radius-top="15" height="1" open-ended="true" position="0 0.5 0"
+                     side="double" segments-radial="12" theta-length="270" theta-start="45"></a-cone>
+                    <a-ring color="tan" side="double" radius-inner="15" radius-outer="16" rotation=" -90 0 0"
+                    segments-theta="12" theta-length="270" theta-start="-45"></a-ring>
+                </a-entity>
+                
+                
+                <!-- stairs -->
+                <a-entity rotation="0 45 0">
+                <a-entity position="1.48 0 -15.5" >
+                    <!-- panels -->
+                    <a-plane width="3" height="6" position="0 7 0.5" side="double"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 3 6"></a-plane>
+                    
+                    <a-plane width="3" height="8" position="0 6 -7.5" side="double"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 3 8"></a-plane>
+                    
+                    <a-plane width="6" height="10" position="0 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 6 10"></a-plane>
+                    
+                    <a-plane width="6" height="10" position="-1.5 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 6 10"></a-plane>
+                    
+                    <a-plane width="8" height="10" position="1.5 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 8 10"></a-plane>
+                    
+                    <!-- stair 1 -->
+                    <a-entity position="0 0 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 1.976 -7" rotation="0 180">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                    </a-entity>
+                         <!-- stair 2 -->
+                    <a-entity position="0 4 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 1.976 -7" rotation="0 180">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                    </a-entity>
+                   <a-entity position="0 8 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                        </a-box>
+                     </a-entity>
+                    
+                </a-entity>
+                </a-entity>
+               <a-entity rotation="0 -45 0" scale="-1 1 1">
+                <a-entity position="1.48 0 -15.5" >
+                    <!-- panels -->
+                    <a-plane width="3" height="6" position="0 7 0.5" side="double"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 3 6"></a-plane>
+                    
+                    <a-plane width="3" height="8" position="0 6 -7.5" side="double"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 3 8"></a-plane>
+                    
+                    <a-plane width="6" height="10" position="0 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 6 10"></a-plane>
+                    
+                    <a-plane width="6" height="10" position="-1.5 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 6 10"></a-plane>
+                    
+                    <a-plane width="8" height="10" position="1.5 5 -3.5" side="double" rotation="0 90 0"
+                    material=" src: latticetexture.png; opacity: .99; repeat: 8 10"></a-plane>
+                    
+                    <!-- stair 1 -->
+                    <a-entity position="0 0 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 1.976 -7" rotation="0 180">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                    </a-entity>
+                         <!-- stair 2 -->
+                    <a-entity position="0 4 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 1.976 -7" rotation="0 180">
+                            <a-entity position="0 0 -0.5" rotation="18.44 0 0">
+                                <a-box src="planks2.png" width="1.5" height=".05" depth="6.324" position="-.75 0 -3.162"></a-box>
+                            </a-entity>
+                        </a-box>
+                    </a-entity>
+                   <a-entity position="0 8 0">
+                        <a-box src="planks1.png" width="3" height=".05" depth="1" position="0 -.024 0">
+                        </a-box>
+                     </a-entity>
+                    
+                </a-entity>
+                </a-entity>
+                
+                
+                    <!-- walls roof entity    -->               
+                    <a-cone src="planks3.png" repeat="36 5" radius-bottom="24" radius-top="24" height="12" open-ended="true" position="0 6 0"
+                     side="double" segments-radial="16"></a-cone>
+                     
+
+                 <a-entity position="0 12 0">
+                    <a-cone color="black" radius-bottom="13" radius-top="18.5" height="3" open-ended="true" position="0 1.5 0"
+                     side="double" segments-radial="16"></a-cone>
+                    <a-cone color="black" radius-top="18.5" radius-bottom="26" height="3" open-ended="true" position="0 1.5 0"
+                     side="double" segments-radial="16"></a-cone>
+                     <a-cone src="planks3.png" repeat="83 2" radius-top="13" radius-bottom="26" height="0" open-ended="true" position="0 0 0"
+                     side="double" segments-radial="16"></a-cone>
+                </a-entity>
+
+                <!--stage -->
+                <a-box src="planks2.png"  repeat="16 11" height="3" width="16" depth="22" position="0 0 -12.5" scale=".9 1 1">
+
+                    <a-entity position="8 1.5 7" rotation="25 90 0">
+                        <a-box src="planks2.png"  repeat="2 1" height="2" width="2" depth="5" position="0 -1 2.5"></a-box>
+                    </a-entity>
+                    <a-entity position="0 -3 -5"><!--stage roof structure-->
+                        <a-plane color="#997950" rotation="90 0 0" height="18" width="18" position="0 12 0"></a-plane>
+                        <a-triangle color="#997950" vertex-a="-9 0 0" vertex-b="0 0 0" vertex-c="0 3 0" position="0 12 9" side="double"></a-triangle>
+                        <a-triangle color="#997950" vertex-a="9 0 0" vertex-b="0 3 0" vertex-c="0 0 0"  position="0 12 9" side="double"></a-triangle>
+    
+                        <a-triangle color="#000" vertex-a="9 0 9" vertex-b="0 3 9" vertex-c="0 3 -9" position="0 12 0" side="double"></a-triangle>
+                        <a-triangle color="#000" vertex-a="0 3 -9" vertex-b="9 0 -9" vertex-c="9 0 9"  position="0 12 0" side="double"></a-triangle>
+    
+                        <a-triangle color="#000" vertex-a="-9 0 9" vertex-c="0 3 9" vertex-b="0 3 -9" position="0 12 0" side="double"></a-triangle>
+                        <a-triangle color="#000" vertex-a="0 3 -9" vertex-c="-9 0 -9" vertex-b="-9 0 9"  position="0 12 0" side="double"></a-triangle>
+    
+                        <a-cylinder height="12.2" radius="0.2" color="#4a2c2a" position="7 6.1 8"></a-cylinder>
+                        <a-cylinder height="12.2" radius="0.2" color="#4a2c2a" position="-7 6.1 8"></a-cylinder>
+                    </a-entity> 
+                </a-box>                
+ 
+ 
+ 
+ 
+ 
+ 
+                <!-- poles -->
+                <a-entity rotation="0 0 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+
+                <a-entity rotation="0 45 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 90 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 135 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 180 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 225 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 270 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 315 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 22.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 67.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 112.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 157.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 202.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 247.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 292.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+                <a-entity rotation="0 337.5 0"><a-cylinder height="12.2" radius="0.1" color="#4a2c2a" position="0 6.1 -16.25"></a-cylinder></a-entity>
+
+
+
+
+            </a-entity>
+
+        <!-- 
+        camera controls as per aframe extras: 
+            https://github.com/c-frame/aframe-extras
+            https://github.com/c-frame/aframe-extras/tree/master/src/controls
+        -->
+        <a-entity visible="false" gltf-model="navmeshGlobe3.gltf" nav-mesh></a-entity>
+		<a-entity id="rig" movement-controls="constrainToNavMesh: true; speed: 0.2" position="0 0 0" >
+		  <a-entity camera 
+			position="0 1.6 0"
+			look-controls="pointerLockEnabled: true">
+		      <a-entity id="scriptpage" 
+		      text="color:orange;value: future test;" scale=".7 .7 .7" position="-0 -.15 -1"></a-entity>
+    		<a-entity visible="false" meta-touch-controls="hand: left" ></a-entity>	
+    		<a-entity visible="false" meta-touch-controls="hand: right" ></a-entity>	
+    		<a-cursor nav-pointer  raycaster="objects: [nav-mesh]"
+			visible="false"></a-cursor>
+		  </a-entity>
+		</a-entity>
+
+        <a-sky color="#448EE4"></a-sky>
+ 
+    </a-scene>
+   <script src="ShakespearePager.js"></script>
+
+    </body>
+</html>
