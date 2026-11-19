@@ -16,3 +16,5 @@ This project is shared as an Open Educational Resource (OER).
 • Code & Software: Licensed under the MIT License (select MIT from the GitHub dropdown).
 • Educational Content & Media: Licensed under CC BY 4.0.
 Educators and students are free to retain, reuse, revise, remix, and redistribute these materials for classroom or personal use with appropriate attribution.
+
+[Theatre Welcome Page](https://drmicphys.github.io/VRTheatre/TheatresHome.html)
